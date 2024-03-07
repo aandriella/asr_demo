@@ -68,7 +68,7 @@ class ASR():
         model = whisper.load_model(model_name, device='cpu')
         sentence = model.transcribe(file_name, fp16=False, language=language_id)
         end = time.time()
-        print(f'sentence: {sentence["text"]}, in {end-start} secs')
+        # print(f'sentence: {sentence["text"]}, in {end-start} secs')
         return sentence["text"], end-start
     
     def google_recognition(self, config, file_name):
@@ -96,7 +96,7 @@ class ASR():
             sentence += result.alternatives[0].transcript
         
         end = time.time() 
-        print(f'sentence: {sentence}, in {end-start} secs')
+        # print(f'sentence: {sentence}, in {end-start} secs')
         return sentence, end-start
     
     def vosk_recognition(self, model_name, file_name):
@@ -126,7 +126,7 @@ class ASR():
         jres = json.loads(rec.FinalResult())
         sentence = text + " " + jres["text"]
         end = time.time() 
-        print(f'sentence: {sentence}, in {end-start} secs')
+        # print(f'sentence: {sentence}, in {end-start} secs')
         return sentence, end-start
     
 
@@ -213,7 +213,10 @@ try:
                       channels=args.channels, subtype=args.subtype) as file:
         with sd.InputStream(samplerate=args.samplerate, device=args.device,
                             channels=args.channels, callback=callback):
+            
             print('#' * 80)
+            os.system("/bin/bash -c 'read -s -n 1 -p \"Press any key to continue...\"'")
+            print('\n')
             print('press Ctrl+C to stop the recording')
             print('#' * 80)
             while True:
@@ -225,35 +228,41 @@ except KeyboardInterrupt:
     
    
    
-    # config = speech.RecognitionConfig(
-    #         encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
-    #         enable_automatic_punctuation=True,
-    #         audio_channel_count=1,
-    #         language_code=google_language_id,
-    #     )
-    # google_sentence, google_time = asr.google_recognition(config, dir_filename)
+    config = speech.RecognitionConfig(
+            encoding=speech.RecognitionConfig.AudioEncoding.LINEAR16,
+            enable_automatic_punctuation=True,
+            audio_channel_count=1,
+            language_code=google_language_id[args.target_language],
+        )
+    # google_sentence, _ = asr.google_recognition(config, dir_filename)
+    # g_wer, g_mer, g_wil, g_wip, g_cer  = asr.compute_error_rate(args.sentence, google_sentence)
     
     whisper_s_model_sentence, _ = asr.openwhisper_recognition(model_name="base", file_name=dir_filename, language_id=args.target_language)
-    ws_wer, ws_mer, ws_wil, ws_wip, ws_cer  = asr.compute_error_rate("Test", whisper_s_model_sentence)
+    ws_wer, ws_mer, ws_wil, ws_wip, ws_cer  = asr.compute_error_rate(args.sentence, whisper_s_model_sentence)
     whisper_l_model_sentence, _ = asr.openwhisper_recognition(model_name="large", file_name=dir_filename, language_id=args.target_language)
-    wl_wer, wl_mer, wl_wil, wl_wip, wl_cer  = asr.compute_error_rate("Test", whisper_l_model_sentence)
+    wl_wer, wl_mer, wl_wil, wl_wip, wl_cer  = asr.compute_error_rate(args.sentence, whisper_l_model_sentence)
    
     
     vosk_small_model = vosk_models_by_language[args.target_language]['base']
     vosk_s_model_sentence, _ = asr.vosk_recognition(vosk_small_model, dir_filename)
-    vs_wer, vs_mer, vs_wil, vs_wip, vs_cer  = asr.compute_error_rate("Test", vosk_s_model_sentence)
-
+    vs_wer, vs_mer, vs_wil, vs_wip, vs_cer  = asr.compute_error_rate(args.sentence, vosk_s_model_sentence)
     vosk_large_model = vosk_models_by_language[args.target_language]['large']
     vosk_l_model_sentence, _ = asr.vosk_recognition(vosk_large_model, dir_filename)
-    vl_wer, vl_mer, vl_wil, vl_wip, vl_cer  = asr.compute_error_rate("Test", vosk_l_model_sentence)
+    vl_wer, vl_mer, vl_wil, vl_wip, vl_cer  = asr.compute_error_rate(args.sentence, vosk_l_model_sentence)
   
+
   # Define the data
     model_data = [
         ('vosk_small', vs_wer, vs_mer, vs_wil, vs_wip, vs_cer),
         ('vosk_large', vl_wer, vl_mer, vl_wil, vl_wip, vl_cer),
         ('whisper_small', ws_wer, ws_mer, ws_wil, ws_wip, ws_cer),
-        ('whisper_large', wl_wer, wl_mer, wl_wil, wl_wip, wl_cer)
+        ('whisper_large', wl_wer, wl_mer, wl_wil, wl_wip, wl_cer),
+    #    ('google', g_wer, g_mer, g_wil, g_wip, g_cer) 
     ]
+
+
+    print(f"TARGET LANGUAGE: {args.target_language}")
+    print(f"SENTENCE: {args.sentence}")
 
     # Calculate the maximum width for each column
     column_widths = [max(len(str(model[i])) for model in model_data) for i in range(len(model_data[0]))]
