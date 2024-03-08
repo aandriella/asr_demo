@@ -262,7 +262,7 @@ except KeyboardInterrupt:
 
 
     print(f"TARGET LANGUAGE: {args.target_language}")
-    print(f"SENTENCE: {args.sentence}")
+    print(f"TARGET SENTENCE: {args.sentence}")
 
     # Calculate the maximum width for each column
     column_widths = [max(len(str(model[i])) for model in model_data) for i in range(len(model_data[0]))]
