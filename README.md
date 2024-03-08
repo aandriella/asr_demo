@@ -24,4 +24,4 @@ you might need to install ffmpeg:
 
 ### Run
 
-python main.py --target_language="english" --sentence="Hello"
+```python main.py --target_language="english" --sentence="Hello"```
