@@ -21,3 +21,7 @@ you might need to install ffmpeg:
 
 ```sudo apt install ffmpeg```
 
+
+### Run
+
+python main.py --target_language="english" --sentence="Hello"
